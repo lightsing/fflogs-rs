@@ -3,10 +3,12 @@ use crate::v1::reqs::ApiRequest;
 use serde::Deserialize;
 use std::fmt;
 
+#[derive(Debug, Clone)]
 pub struct Request {
     client: FFLogsV1Client,
 }
 
+#[doc(hidden)]
 pub struct Path;
 
 impl ApiRequest for Request {

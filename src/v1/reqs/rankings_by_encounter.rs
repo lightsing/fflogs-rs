@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 
+#[derive(Debug, Clone)]
 pub struct Request {
     encounter_id: u64,
     params: Params,
@@ -37,7 +38,7 @@ impl ApiRequest for Request {
     }
 }
 
-#[derive(Default, Debug, Serialize)]
+#[derive(Default, Debug, Clone, Serialize)]
 pub struct Params {
     #[serde(skip_serializing_if = "Option::is_none")]
     metric: Option<Metric>,

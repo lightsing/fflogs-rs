@@ -14,6 +14,7 @@ pub struct Request {
     client: FFLogsV1Client,
 }
 
+#[doc(hidden)]
 pub struct Path<'a> {
     view: &'a DataType,
     code: &'a CompactString,

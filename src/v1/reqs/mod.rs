@@ -22,19 +22,24 @@ pub enum ApiResponse<T> {
 pub trait ApiRequest {
     type Output: DeserializeOwned;
 
+    #[doc(hidden)]
     type Path<'a>: Display
     where
         Self: 'a;
 
+    #[doc(hidden)]
     type Query: Serialize;
 
     /// Returns the client to use for the request.
+    #[doc(hidden)]
     fn client(&self) -> &FFLogsV1Client;
 
     /// Formats the path of the request.
+    #[doc(hidden)]
     fn path(&self) -> Self::Path<'_>;
 
     /// Returns the query to use for the request.
+    #[doc(hidden)]
     fn query(&self) -> Option<&Self::Query> {
         None
     }

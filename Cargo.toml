@@ -21,3 +21,6 @@ tokio = { version = "1", features = ["full"] }
 brotli = ["reqwest/brotli"]
 deflate = ["reqwest/deflate"]
 gzip = ["reqwest/gzip"]
+
+[lints.rust]
+missing_docs = "warn"

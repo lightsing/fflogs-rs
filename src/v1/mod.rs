@@ -1,10 +1,12 @@
+//! FFLogs V1 API client.
 use compact_str::CompactString;
 use reqwest::ClientBuilder;
 use std::borrow::Cow;
 use std::sync::Arc;
 
-pub mod reqs;
+pub mod apis;
 
+/// A client for the FFLogs V1 API.
 #[derive(Debug, Clone)]
 pub struct FFLogsV1Client {
     pub(crate) inner: Arc<FFLogsV1ClientInner>,
@@ -17,6 +19,7 @@ pub(crate) struct FFLogsV1ClientInner {
     pub(crate) api_key: Cow<'static, str>,
 }
 
+/// A builder for a `FFLogsV1Client`.
 #[derive(Debug)]
 #[must_use]
 pub struct FFLogsV1ClientBuilder<A> {
@@ -36,11 +39,13 @@ impl<A> FFLogsV1ClientBuilder<A> {
         }
     }
 
+    /// Sets the base URL for the FFLogs API. Trailing slashes are not required.
     pub fn base_url(mut self, base_url: impl Into<Cow<'static, str>>) -> Self {
         self.base_url = base_url.into();
         self
     }
 
+    /// Sets the API key to use for requests.
     pub fn api_key<A1: Into<Cow<'static, str>>>(
         self,
         api_key: A1,
@@ -82,16 +87,16 @@ impl FFLogsV1Client {
     /// Each zone corresponds to a raid/dungeon instance in the game and has its own set of
     /// encounters.
     #[must_use]
-    pub fn zones(&self) -> reqs::zones::Request {
-        reqs::zones::Request::new(self.clone())
+    pub fn zones(&self) -> apis::zones::Request {
+        apis::zones::Request::new(self.clone())
     }
 
     /// Gets an array of Class objects.
     ///
     /// Each Class corresponds to a class in the game.
     #[must_use]
-    pub fn classes(&self) -> reqs::classes::Request {
-        reqs::classes::Request::new(self.clone())
+    pub fn classes(&self) -> apis::classes::Request {
+        apis::classes::Request::new(self.clone())
     }
 
     /// Gets an object that contains a total count and an array of EncounterRanking objects
@@ -99,8 +104,8 @@ impl FFLogsV1Client {
     ///
     /// Each EncounterRanking corresponds to a single character or guild/team.
     #[must_use]
-    pub fn rankings_by_encounter(&self, encounter_id: u64) -> reqs::rankings_by_encounter::Request {
-        reqs::rankings_by_encounter::Request::new(self.clone(), encounter_id)
+    pub fn rankings_by_encounter(&self, encounter_id: u64) -> apis::rankings_by_encounter::Request {
+        apis::rankings_by_encounter::Request::new(self.clone(), encounter_id)
     }
 
     /// Gets a set of events based off the view you're asking for.
@@ -109,17 +114,17 @@ impl FFLogsV1Client {
     #[must_use]
     pub fn report_events_by_code(
         &self,
-        view: reqs::common::DataType,
+        view: apis::common::DataType,
         code: impl Into<CompactString>,
-    ) -> reqs::report_events_by_code::Request {
-        reqs::report_events_by_code::Request::new(self.clone(), view, code)
+    ) -> apis::report_events_by_code::Request {
+        apis::report_events_by_code::Request::new(self.clone(), view, code)
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::v1::reqs::{ApiRequest, common::DataType};
+    use crate::v1::apis::{ApiRequest, common::DataType};
     use std::sync::LazyLock;
     use strum::IntoEnumIterator;
 

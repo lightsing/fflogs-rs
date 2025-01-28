@@ -1,3 +1,4 @@
+//! Common types used in requests.
 use serde::{Deserialize, Serialize};
 
 /// The type of data requested.

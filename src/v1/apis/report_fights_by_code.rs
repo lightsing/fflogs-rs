@@ -1,3 +1,4 @@
+//! API: GET `/report/fights/{code}`
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize)]
@@ -20,7 +21,6 @@ pub struct Response {
     pub zone: u64,
     pub exported_characters: Vec<ExportedCharacter>,
 }
-
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Fight {
@@ -49,7 +49,6 @@ pub struct Fight {
     pub last_phase_for_percentage_display: u64,
     pub maps: Vec<Map>,
 }
-
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Map {
@@ -120,7 +119,6 @@ pub struct EnemyPet {
 pub struct Phase {
     // todo
 }
-
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ExportedCharacter {

@@ -1,3 +1,4 @@
+//! API: GET `/report/events/{view}/{code}`
 use super::common::DataType;
 use crate::v1::FFLogsV1Client;
 use compact_str::CompactString;
@@ -6,6 +7,8 @@ use serde_with::{BoolFromInt, serde_as};
 use std::fmt;
 use std::ops::Not;
 
+/// Request
+#[must_use = "`Request` does nothing unless you execute it"]
 #[derive(Debug, Clone)]
 pub struct Request {
     view: DataType,
@@ -21,7 +24,7 @@ pub struct Path<'a> {
 }
 
 impl super::ApiRequest for Request {
-    type Output = Response;
+    type Response = Response;
 
     type Path<'a> = Path<'a>;
 
@@ -43,6 +46,7 @@ impl super::ApiRequest for Request {
     }
 }
 
+#[doc(hidden)]
 #[serde_as]
 #[derive(Default, Debug, Clone, Serialize)]
 pub struct Params {
@@ -323,81 +327,157 @@ impl Request {
         self
     }
 
-    /// Set an optional actor ID to filter to.
+    /// Set the optional actor ID to filter to.
     ///
     /// If set, only events where the ID matches the source (or target for damage-taken)
     /// of the event will be returned.
+    ///
     /// The actor's pets will also be included (unless the options field overrides).
     pub fn source_id(mut self, source_id: u64) -> Self {
         self.params.source_id = Some(source_id);
         self
     }
 
+    /// Set the optional actor instance ID to filter to.
+    ///
+    /// If set, only events where the instance ID matches the source (or target for damage-taken)
+    /// of the event will be returned.
+    ///
+    /// This is useful to look for all events involving NPC N, where N is the actor instance ID.
     pub fn source_instance(mut self, source_instance: u64) -> Self {
         self.params.source_instance = Some(source_instance);
         self
     }
 
+    /// Set the optional actor class to filter to.
+    ///
+    /// If set, only events where the source (or target for damage-taken) involves that class
+    /// (e.g., Mage) will be returned.
     pub fn source_class(mut self, source_class: impl Into<CompactString>) -> Self {
         self.params.source_class = Some(source_class.into());
         self
     }
 
+    /// Set the optional actor ID to filter to.
+    ///
+    /// If set, only events where the ID matches the target (or source for damage-taken)
+    /// of the event will be returned.
+    ///
+    /// This value is not used in the 'deaths', 'survivability', 'resources' and 'resources-gains'
+    /// views.
     pub fn target_id(mut self, target_id: u64) -> Self {
         self.params.target_id = Some(target_id);
         self
     }
 
+    /// Set the optional actor instance ID to filter to.
+    ///
+    /// If set, only events where the instance ID matches the target (or source for damage-taken)
+    /// of the event will be returned.
+    ///
+    /// This is useful to look for all events involving NPC N, where N is the actor instance ID.
+    ///
+    /// This value is not used in the 'deaths', 'survivability', 'resources' and 'resources-gains'
+    /// views.
     pub fn target_instance(mut self, target_instance: u64) -> Self {
         self.params.target_instance = Some(target_instance);
         self
     }
 
+    /// Set the optional actor class to filter to.
+    ///
+    /// If set, only events where the target (or source for damage-taken) involves that class
+    /// (e.g., Mage) will be returned.
+    ///
+    /// This value is not used in the 'deaths', 'survivability', 'resources' and 'resources-gains'
+    /// views.
     pub fn target_class(mut self, target_class: impl Into<CompactString>) -> Self {
         self.params.target_class = Some(target_class.into());
         self
     }
 
+    /// Set the optional ability ID to filter to.
+    ///
+    /// If set, only events where the ability matches will be returned.
+    /// Consolidated abilities (WCL only) are represented using a negative number that matches the
+    /// ability ID that everything is consolidated under.
+    ///
+    /// For the 'deaths' view, this represents a specific killing blow.
+    /// For the resources views, the abilityid is not an ability but a resource type.
+    ///
+    /// Valid resource types can be viewed at https://www.fflogs.com/reports/resource_types/
     pub fn ability_id(mut self, ability_id: u64) -> Self {
         self.params.ability_id = Some(ability_id);
         self
     }
 
+    /// Set the optional death to filter to.
+    ///
+    /// Only used for the deaths command.
+    ///
+    /// Select the Nth death in the time range that matches all the other filters.
     pub fn death(mut self, death: u64) -> Self {
         self.params.death = Some(death);
         self
     }
 
+    /// Set the set of options for what to include/exclude.
+    ///
+    /// These correspond to options like Include Overkill in the Damage Done pane.
+    /// Complete list will be forthcoming.
+    ///
+    /// If omitted, appropriate defaults that match WCL's default behavior will be chosen.
+    ///
+    /// This value is not used in the 'deaths', 'survivability', 'resources' and 'resources-gains'
+    /// views.
     pub fn options(mut self, options: u64) -> Self {
         self.params.options = Some(options);
         self
     }
 
+    /// Set the optional death cutoff.
+    ///
+    /// If set, events after that number of deaths have occurred will not be examined.
     pub fn cutoff(mut self, cutoff: u64) -> Self {
         self.params.cutoff = Some(cutoff);
         self
     }
 
+    /// Set the optional encounter filter.
+    ///
+    /// If set to a specific encounter ID, only fights involving a specific encounter will be
+    /// considered.
+    ///
+    /// The encounter IDs match those used in rankings/statistics.
     pub fn encounter(mut self, encounter: u64) -> Self {
         self.params.encounter = Some(encounter);
         self
     }
 
+    /// Set the optional wipes filter.
+    ///
+    /// If set to `true`, only wipes will be considered.
     pub fn wipes(mut self, wipes: bool) -> Self {
         self.params.wipes = wipes;
         self
     }
 
+    /// Set the optional difficulty filter.
     pub fn difficulty(mut self, difficulty: u64) -> Self {
         self.params.difficulty = Some(difficulty);
         self
     }
 
+    /// Set the optional filter written in WCL's expression language.
+    ///
+    /// Events must match the filter to be included.
     pub fn filter(mut self, filter: impl Into<CompactString>) -> Self {
         self.params.filter = Some(filter.into());
         self
     }
 
+    /// Set the optional flag indicating that the results should be translated into the language
+    /// of the host (e.g., cn.fflogs.com would get Chinese results).
     pub fn translate(mut self, translate: bool) -> Self {
         self.params.translate = translate;
         self

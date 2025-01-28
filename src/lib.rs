@@ -1,3 +1,4 @@
+//! # Rust API for the [fflogs](https://www.fflogs.com) API
 mod error;
 pub mod v1;
 

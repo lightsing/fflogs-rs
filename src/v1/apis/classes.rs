@@ -1,8 +1,11 @@
+//! API: GET /classes
 use crate::v1::FFLogsV1Client;
-use crate::v1::reqs::ApiRequest;
+use crate::v1::apis::ApiRequest;
 use serde::Deserialize;
 use std::fmt;
 
+/// Request
+#[must_use = "`Request` does nothing unless you execute it"]
 #[derive(Debug, Clone)]
 pub struct Request {
     client: FFLogsV1Client,
@@ -12,7 +15,7 @@ pub struct Request {
 pub struct Path;
 
 impl ApiRequest for Request {
-    type Output = Vec<Class>;
+    type Response = Vec<Class>;
 
     type Path<'a> = Path;
 

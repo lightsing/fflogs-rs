@@ -1,3 +1,4 @@
+//! Contains the api types for the FFLogs API v1.
 use crate::v1::FFLogsV1Client;
 use reqwest::header;
 use serde::de::DeserializeOwned;
@@ -12,15 +13,10 @@ pub mod report_fights_by_code;
 pub mod report_tables_by_code;
 pub mod zones;
 
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
-pub enum ApiResponse<T> {
-    Err(crate::ApiError),
-    Ok(T),
-}
-
+/// Request trait
 pub trait ApiRequest {
-    type Output: DeserializeOwned;
+    /// The response type of this endpoint
+    type Response: DeserializeOwned;
 
     #[doc(hidden)]
     type Path<'a>: Display
@@ -44,7 +40,8 @@ pub trait ApiRequest {
         None
     }
 
-    fn execute(&self) -> impl Future<Output = crate::Result<Self::Output>> + Send + Sync {
+    /// Execute the request and deserialize the response
+    fn execute(&self) -> impl Future<Output = crate::Result<Self::Response>> + Send + Sync {
         let client = self.client().inner.as_ref();
         let mut url = format!(
             "{base_url}{path}?api_key={api_key}",
@@ -71,19 +68,26 @@ pub trait ApiRequest {
                 .await
                 .map_err(crate::Error::request)?;
 
+            #[derive(Debug, Deserialize)]
+            #[serde(untagged)]
+            enum ApiResponse<T> {
+                Err(crate::ApiError),
+                Ok(T),
+            }
+
+            impl<T> From<ApiResponse<T>> for Result<T, crate::ApiError> {
+                fn from(res: ApiResponse<T>) -> Self {
+                    match res {
+                        ApiResponse::Ok(t) => Ok(t),
+                        ApiResponse::Err(e) => Err(e),
+                    }
+                }
+            }
+
             let jd = &mut serde_json::Deserializer::from_str(text.as_str());
-            let res: ApiResponse<Self::Output> =
+            let res: ApiResponse<Self::Response> =
                 serde_path_to_error::deserialize(jd).map_err(crate::Error::deserialize)?;
             Ok(Result::from(res)?)
-        }
-    }
-}
-
-impl<T> From<ApiResponse<T>> for Result<T, crate::ApiError> {
-    fn from(res: ApiResponse<T>) -> Self {
-        match res {
-            ApiResponse::Ok(t) => Ok(t),
-            ApiResponse::Err(e) => Err(e),
         }
     }
 }

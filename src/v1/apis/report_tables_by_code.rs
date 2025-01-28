@@ -1,3 +1,4 @@
+//! API: GET `/report/tables/{view}/{code}`
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize)]
@@ -15,7 +16,6 @@ pub struct Response {
     game_version: u64,
 }
 
-
 #[derive(Debug, Clone, Deserialize)]
 pub struct Composition {
     name: String,
@@ -23,9 +23,8 @@ pub struct Composition {
     guid: u64,
     #[serde(rename = "type")]
     ty: String,
-    specs: Vec<Spec>
+    specs: Vec<Spec>,
 }
-
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Spec {

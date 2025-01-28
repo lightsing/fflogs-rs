@@ -1,10 +1,13 @@
+//! API: GET `/rankings/encounter/{encounterID}`
 use crate::v1::FFLogsV1Client;
-use crate::v1::reqs::ApiRequest;
+use crate::v1::apis::ApiRequest;
 use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 
+/// Request
+#[must_use = "`Request` does nothing unless you execute it"]
 #[derive(Debug, Clone)]
 pub struct Request {
     encounter_id: u64,
@@ -17,7 +20,7 @@ pub struct Path<'a> {
 }
 
 impl ApiRequest for Request {
-    type Output = Response;
+    type Response = Response;
 
     type Path<'a> = Path<'a>;
 

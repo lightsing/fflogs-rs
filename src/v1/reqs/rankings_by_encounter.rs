@@ -1,26 +1,35 @@
 use crate::v1::FFLogsV1Client;
 use crate::v1::reqs::ApiRequest;
+use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
 use std::collections::HashMap;
+use std::fmt;
 
-pub struct Request<'a> {
+pub struct Request {
     encounter_id: u64,
-    params: Params<'a>,
+    params: Params,
     client: FFLogsV1Client,
 }
 
-impl<'a> ApiRequest for Request<'a> {
+pub struct Path<'a> {
+    encounter_id: &'a u64,
+}
+
+impl ApiRequest for Request {
     type Output = Response;
 
-    type Query = Params<'a>;
+    type Path<'a> = Path<'a>;
+
+    type Query = Params;
 
     fn client(&self) -> &FFLogsV1Client {
         &self.client
     }
 
-    fn path(&self) -> Cow<'static, str> {
-        format!("/rankings/encounter/{}", self.encounter_id).into()
+    fn path(&self) -> Self::Path<'_> {
+        Path {
+            encounter_id: &self.encounter_id,
+        }
     }
 
     fn query(&self) -> Option<&Self::Query> {
@@ -29,11 +38,11 @@ impl<'a> ApiRequest for Request<'a> {
 }
 
 #[derive(Default, Debug, Serialize)]
-pub struct Params<'a> {
+pub struct Params {
     #[serde(skip_serializing_if = "Option::is_none")]
     metric: Option<Metric>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    size: Option<String>,
+    size: Option<CompactString>,
     #[serde(skip_serializing_if = "Option::is_none")]
     partition: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -43,13 +52,13 @@ pub struct Params<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     bracket: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    server: Option<Cow<'a, str>>,
+    server: Option<CompactString>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    region: Option<Cow<'a, str>>,
+    region: Option<CompactString>,
     #[serde(skip_serializing_if = "Option::is_none")]
     page: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    filter: Option<Cow<'a, str>>,
+    filter: Option<CompactString>,
 }
 
 /// Valid fight metrics are 'speed', 'execution' and 'feats'.
@@ -108,7 +117,7 @@ pub struct Ranking {
     pub extra: HashMap<String, serde_json::Value>,
 }
 
-impl<'a> Request<'a> {
+impl Request {
     pub(crate) fn new(client: FFLogsV1Client, encounter_id: u64) -> Self {
         Self {
             encounter_id,
@@ -122,7 +131,7 @@ impl<'a> Request<'a> {
         self
     }
 
-    pub fn size(&mut self, size: impl Into<String>) -> &mut Self {
+    pub fn size(&mut self, size: impl Into<CompactString>) -> &mut Self {
         self.params.size = Some(size.into());
         self
     }
@@ -147,12 +156,12 @@ impl<'a> Request<'a> {
         self
     }
 
-    pub fn server(&mut self, server: impl Into<Cow<'a, str>>) -> &mut Self {
+    pub fn server(&mut self, server: impl Into<CompactString>) -> &mut Self {
         self.params.server = Some(server.into());
         self
     }
 
-    pub fn region(&mut self, region: impl Into<Cow<'a, str>>) -> &mut Self {
+    pub fn region(&mut self, region: impl Into<CompactString>) -> &mut Self {
         self.params.region = Some(region.into());
         self
     }
@@ -162,8 +171,14 @@ impl<'a> Request<'a> {
         self
     }
 
-    pub fn filter(&mut self, filter: impl Into<Cow<'a, str>>) -> &mut Self {
+    pub fn filter(&mut self, filter: impl Into<CompactString>) -> &mut Self {
         self.params.filter = Some(filter.into());
         self
+    }
+}
+
+impl fmt::Display for Path<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "/rankings/encounter/{}", self.encounter_id)
     }
 }

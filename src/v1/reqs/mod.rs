@@ -2,7 +2,7 @@ use crate::v1::FFLogsV1Client;
 use reqwest::header;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
+use std::fmt::Display;
 
 pub mod classes;
 pub mod common;
@@ -22,13 +22,17 @@ pub enum ApiResponse<T> {
 pub trait ApiRequest {
     type Output: DeserializeOwned;
 
+    type Path<'a>: Display
+    where
+        Self: 'a;
+
     type Query: Serialize;
 
     /// Returns the client to use for the request.
     fn client(&self) -> &FFLogsV1Client;
 
     /// Formats the path of the request.
-    fn path(&self) -> Cow<'static, str>;
+    fn path(&self) -> Self::Path<'_>;
 
     /// Returns the query to use for the request.
     fn query(&self) -> Option<&Self::Query> {

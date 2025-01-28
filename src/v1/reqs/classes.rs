@@ -1,14 +1,18 @@
 use crate::v1::FFLogsV1Client;
 use crate::v1::reqs::ApiRequest;
 use serde::Deserialize;
-use std::borrow::Cow;
+use std::fmt;
 
 pub struct Request {
     client: FFLogsV1Client,
 }
 
+pub struct Path;
+
 impl ApiRequest for Request {
     type Output = Vec<Class>;
+
+    type Path<'a> = Path;
 
     type Query = ();
 
@@ -16,8 +20,8 @@ impl ApiRequest for Request {
         &self.client
     }
 
-    fn path(&self) -> Cow<'static, str> {
-        "/classes".into()
+    fn path(&self) -> Self::Path<'_> {
+        Path
     }
 }
 
@@ -44,5 +48,11 @@ pub struct Spec {
 impl Request {
     pub(crate) fn new(client: FFLogsV1Client) -> Self {
         Self { client }
+    }
+}
+
+impl fmt::Display for Path {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "/classes")
     }
 }

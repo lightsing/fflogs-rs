@@ -3,7 +3,7 @@ use crate::v1::FFLogsV1Client;
 use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
 use serde_with::{BoolFromInt, serde_as};
-use std::borrow::Cow;
+use std::fmt;
 use std::ops::Not;
 
 #[derive(Debug, Clone)]
@@ -14,21 +14,27 @@ pub struct Request {
     client: FFLogsV1Client,
 }
 
+pub struct Path<'a> {
+    view: &'a DataType,
+    code: &'a CompactString,
+}
+
 impl super::ApiRequest for Request {
     type Output = Response;
+
+    type Path<'a> = Path<'a>;
+
     type Query = Params;
 
     fn client(&self) -> &FFLogsV1Client {
         &self.client
     }
 
-    fn path(&self) -> Cow<'static, str> {
-        format!(
-            "/report/events/{view}/{code}",
-            view = self.view,
-            code = self.code
-        )
-        .into()
+    fn path(&self) -> Self::Path<'_> {
+        Path {
+            view: &self.view,
+            code: &self.code,
+        }
     }
 
     fn query(&self) -> Option<&Self::Query> {
@@ -394,5 +400,16 @@ impl Request {
     pub fn translate(mut self, translate: bool) -> Self {
         self.params.translate = translate;
         self
+    }
+}
+
+impl fmt::Display for Path<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "/report/events/{view}/{code}",
+            view = self.view,
+            code = self.code
+        )
     }
 }

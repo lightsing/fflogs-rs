@@ -1,21 +1,22 @@
 use super::common::DataType;
 use crate::v1::FFLogsV1Client;
+use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
 use serde_with::{BoolFromInt, serde_as};
 use std::borrow::Cow;
 use std::ops::Not;
 
 #[derive(Debug, Clone)]
-pub struct Request<'a> {
+pub struct Request {
     view: DataType,
-    code: Cow<'a, str>,
-    params: Params<'a>,
+    code: CompactString,
+    params: Params,
     client: FFLogsV1Client,
 }
 
-impl<'a> super::ApiRequest for Request<'a> {
+impl super::ApiRequest for Request {
     type Output = Response;
-    type Query = Params<'a>;
+    type Query = Params;
 
     fn client(&self) -> &FFLogsV1Client {
         &self.client
@@ -37,7 +38,7 @@ impl<'a> super::ApiRequest for Request<'a> {
 
 #[serde_as]
 #[derive(Default, Debug, Clone, Serialize)]
-pub struct Params<'a> {
+pub struct Params {
     #[serde(skip_serializing_if = "Option::is_none")]
     start: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -50,38 +51,38 @@ pub struct Params<'a> {
     #[serde(rename = "sourceinstance", skip_serializing_if = "Option::is_none")]
     source_instance: Option<u64>,
     #[serde(rename = "source_class", skip_serializing_if = "Option::is_none")]
-    source_class: Option<Cow<'a, str>>,
+    source_class: Option<CompactString>,
     #[serde(rename = "targetid", skip_serializing_if = "Option::is_none")]
     target_id: Option<u64>,
     #[serde(rename = "targetinstance", skip_serializing_if = "Option::is_none")]
     target_instance: Option<u64>,
     #[serde(rename = "targetclass", skip_serializing_if = "Option::is_none")]
-    target_class: Option<Cow<'a, str>>,
+    target_class: Option<CompactString>,
     // Those fields seem not to be used in FFXIV
     // #[serde(
     //     rename = "sourceAurasPresent",
     //     skip_serializing_if = "HashSet::is_empty"
     // )]
-    // #[serde_as(as = "StringWithSeparator::<CommaSeparator, Cow<'a, str>>")]
-    // source_auras_present: HashSet<Cow<'a, str>>,
+    // #[serde_as(as = "StringWithSeparator::<CommaSeparator, CompactString>")]
+    // source_auras_present: HashSet<CompactString>,
     // #[serde(
     //     rename = "sourceAurasAbsent",
     //     skip_serializing_if = "HashSet::is_empty"
     // )]
-    // #[serde_as(as = "StringWithSeparator::<CommaSeparator, Cow<'a, str>>")]
-    // source_auras_absent: HashSet<Cow<'a, str>>,
+    // #[serde_as(as = "StringWithSeparator::<CommaSeparator, CompactString>")]
+    // source_auras_absent: HashSet<CompactString>,
     // #[serde(
     //     rename = "targetAurasPresent",
     //     skip_serializing_if = "HashSet::is_empty"
     // )]
-    // #[serde_as(as = "StringWithSeparator::<CommaSeparator, Cow<'a, str>>")]
-    // target_auras_present: HashSet<Cow<'a, str>>,
+    // #[serde_as(as = "StringWithSeparator::<CommaSeparator, CompactString>")]
+    // target_auras_present: HashSet<CompactString>,
     // #[serde(
     //     rename = "targetAurasAbsent",
     //     skip_serializing_if = "HashSet::is_empty"
     // )]
-    // #[serde_as(as = "StringWithSeparator::<CommaSeparator, Cow<'a, str>>")]
-    // target_auras_absent: HashSet<Cow<'a, str>>,
+    // #[serde_as(as = "StringWithSeparator::<CommaSeparator, CompactString>")]
+    // target_auras_absent: HashSet<CompactString>,
     #[serde(rename = "abilityid", skip_serializing_if = "Option::is_none")]
     ability_id: Option<u64>,
     #[serde(rename = "death", skip_serializing_if = "Option::is_none")]
@@ -98,7 +99,7 @@ pub struct Params<'a> {
     #[serde(rename = "difficulty", skip_serializing_if = "Option::is_none")]
     difficulty: Option<u64>,
     #[serde(rename = "filter", skip_serializing_if = "Option::is_none")]
-    filter: Option<Cow<'a, str>>,
+    filter: Option<CompactString>,
     #[serde(default, rename = "translate", skip_serializing_if = "<&bool>::not")]
     translate: bool,
 }
@@ -158,22 +159,22 @@ pub enum Target {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DetailSourceTarget {
-    name: String,
-    id: i64,
-    guid: u64,
+    pub name: CompactString,
+    pub id: i64,
+    pub guid: u64,
     #[serde(rename = "type")]
-    ty: String,
-    icon: String,
+    pub ty: CompactString,
+    pub icon: CompactString,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Ability {
-    pub name: String,
+    pub name: CompactString,
     pub guid: u64,
     #[serde(rename = "type")]
     pub ty: u64,
-    pub ability_icon: String,
+    pub ability_icon: CompactString,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -233,8 +234,6 @@ pub enum ReportEventDetails {
 pub struct BuffEvent {
     pub extra_ability: Option<Ability>,
     pub duration: u64,
-    #[serde(default)]
-    pub stack: Option<u64>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -265,11 +264,11 @@ pub struct BeginCastEvent {
     pub duration: u64,
 }
 
-impl<'a> Request<'a> {
+impl Request {
     pub(crate) fn new(
         client: FFLogsV1Client,
         view: DataType,
-        code: impl Into<Cow<'a, str>>,
+        code: impl Into<CompactString>,
     ) -> Self {
         Self {
             view,
@@ -286,7 +285,7 @@ impl<'a> Request<'a> {
     }
 
     /// Set the report code.
-    pub fn code(mut self, code: impl Into<Cow<'a, str>>) -> Self {
+    pub fn code(mut self, code: impl Into<CompactString>) -> Self {
         self.code = code.into();
         self
     }
@@ -332,7 +331,7 @@ impl<'a> Request<'a> {
         self
     }
 
-    pub fn source_class(mut self, source_class: impl Into<Cow<'a, str>>) -> Self {
+    pub fn source_class(mut self, source_class: impl Into<CompactString>) -> Self {
         self.params.source_class = Some(source_class.into());
         self
     }
@@ -347,7 +346,7 @@ impl<'a> Request<'a> {
         self
     }
 
-    pub fn target_class(mut self, target_class: impl Into<Cow<'a, str>>) -> Self {
+    pub fn target_class(mut self, target_class: impl Into<CompactString>) -> Self {
         self.params.target_class = Some(target_class.into());
         self
     }
@@ -387,7 +386,7 @@ impl<'a> Request<'a> {
         self
     }
 
-    pub fn filter(mut self, filter: impl Into<Cow<'a, str>>) -> Self {
+    pub fn filter(mut self, filter: impl Into<CompactString>) -> Self {
         self.params.filter = Some(filter.into());
         self
     }

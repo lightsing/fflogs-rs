@@ -1,3 +1,4 @@
+use compact_str::CompactString;
 use reqwest::ClientBuilder;
 use std::borrow::Cow;
 use std::sync::Arc;
@@ -106,11 +107,11 @@ impl FFLogsV1Client {
     ///
     /// This exactly corresponds to the Events view on the site.
     #[must_use]
-    pub fn report_events_by_code<'a>(
+    pub fn report_events_by_code(
         &self,
         view: reqs::common::DataType,
-        code: impl Into<Cow<'a, str>>,
-    ) -> reqs::report_events_by_code::Request<'a> {
+        code: impl Into<CompactString>,
+    ) -> reqs::report_events_by_code::Request {
         reqs::report_events_by_code::Request::new(self.clone(), view, code)
     }
 }

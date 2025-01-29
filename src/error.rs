@@ -39,21 +39,27 @@ impl Error {
     where
         E: Into<BoxError>,
     {
-        Self::Builder(error.into())
+        let error = Self::Builder(error.into());
+        error!("{error}");
+        error
     }
 
     pub(crate) fn request<E>(error: E) -> Self
     where
         E: Into<BoxError>,
     {
-        Self::Request(error.into())
+        let error = Self::Request(error.into());
+        error!("{error}");
+        error
     }
 
     pub(crate) fn deserialize<E>(error: E) -> Self
     where
         E: Into<BoxError>,
     {
-        Self::Deserialize(error.into())
+        let error = Self::Deserialize(error.into());
+        error!("{error}");
+        error
     }
 }
 

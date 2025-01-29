@@ -86,7 +86,6 @@ impl FFLogsV1Client {
     ///
     /// Each zone corresponds to a raid/dungeon instance in the game and has its own set of
     /// encounters.
-    #[must_use]
     pub fn zones(&self) -> apis::zones::Request {
         apis::zones::Request::new(self.clone())
     }
@@ -94,7 +93,6 @@ impl FFLogsV1Client {
     /// Gets an array of Class objects.
     ///
     /// Each Class corresponds to a class in the game.
-    #[must_use]
     pub fn classes(&self) -> apis::classes::Request {
         apis::classes::Request::new(self.clone())
     }
@@ -103,15 +101,22 @@ impl FFLogsV1Client {
     /// and a total number of rankings for that encounter.
     ///
     /// Each EncounterRanking corresponds to a single character or guild/team.
-    #[must_use]
     pub fn rankings_by_encounter(&self, encounter_id: u64) -> apis::rankings_by_encounter::Request {
         apis::rankings_by_encounter::Request::new(self.clone(), encounter_id)
+    }
+
+    /// Gets arrays of fights and the participants in those fights. Each Fight corresponds to a
+    /// single pull of a boss.
+    pub fn report_fights_by_code(
+        &self,
+        code: impl Into<CompactString>,
+    ) -> apis::report_fights_by_code::Request {
+        apis::report_fights_by_code::Request::new(self.clone(), code)
     }
 
     /// Gets a set of events based off the view you're asking for.
     ///
     /// This exactly corresponds to the Events view on the site.
-    #[must_use]
     pub fn report_events_by_code(
         &self,
         view: apis::common::DataType,
@@ -161,6 +166,17 @@ mod test {
             .execute()
             .await
             .expect("Failed to execute request");
+    }
+
+    #[tokio::test]
+    async fn test_report_fights_by_code() {
+        let res = CLIENT
+            .report_fights_by_code("HfrpNycxX2FvPKjW")
+            .execute()
+            .await
+            .expect("Failed to execute request");
+
+        trace!("{:#?}", res);
     }
 
     #[tokio::test]

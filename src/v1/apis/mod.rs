@@ -55,6 +55,7 @@ pub trait ApiRequest {
             url.push_str("&");
             url.push_str(qs.as_str());
         }
+        trace!("Requesting: {url}");
 
         async {
             let text = client
@@ -68,26 +69,13 @@ pub trait ApiRequest {
                 .await
                 .map_err(crate::Error::request)?;
 
-            #[derive(Debug, Deserialize)]
-            #[serde(untagged)]
-            enum ApiResponse<T> {
-                Err(crate::ApiError),
-                Ok(T),
+            if let Ok(err) = serde_json::from_str::<crate::ApiError>(&text) {
+                return Err(crate::Error::Api(err));
             }
-
-            impl<T> From<ApiResponse<T>> for Result<T, crate::ApiError> {
-                fn from(res: ApiResponse<T>) -> Self {
-                    match res {
-                        ApiResponse::Ok(t) => Ok(t),
-                        ApiResponse::Err(e) => Err(e),
-                    }
-                }
-            }
-
             let jd = &mut serde_json::Deserializer::from_str(text.as_str());
-            let res: ApiResponse<Self::Response> =
+            let res: Self::Response =
                 serde_path_to_error::deserialize(jd).map_err(crate::Error::deserialize)?;
-            Ok(Result::from(res)?)
+            Ok(res)
         }
     }
 }
